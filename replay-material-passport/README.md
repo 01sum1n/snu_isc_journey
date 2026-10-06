@@ -9,6 +9,7 @@ An AI-assisted intake prototype for found parts used in a reconfigurable play-fu
 - checks whether a part sits inside the project’s compatibility envelope
 - generates a structured prompt for image analysis in ChatGPT
 - can send the uploaded image directly to the OpenAI Responses API and fill the passport draft automatically
+- counts repeated identical components in one photo and stores them as one passport with a quantity
 - lets the user paste the returned JSON as a draft, then manually validate the passport
 - stores all cards in the browser and exports the inventory as JSON
 
