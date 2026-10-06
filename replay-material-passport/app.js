@@ -9,6 +9,8 @@ const placeholder = document.querySelector("#photoPlaceholder");
 const cardGrid = document.querySelector("#cardGrid");
 const emptyState = document.querySelector("#emptyState");
 const filterFamily = document.querySelector("#filterFamily");
+const apiKey = document.querySelector("#apiKey");
+const model = document.querySelector("#model");
 let imageData = "";
 
 const loadParts = () => JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]");
@@ -111,6 +113,55 @@ form.addEventListener("submit", (event) => {
 
 document.querySelector("#toggleJson").addEventListener("click", () => {
   const panel = document.querySelector("#jsonPanel"); panel.hidden = !panel.hidden;
+});
+
+function materialSchema() {
+  return {
+    type: "object",
+    additionalProperties: false,
+    properties: {
+      family: { type: "string", enum: ["LINEAR", "PLANAR", "TEXTILE"] },
+      material: { type: "string" },
+      diameter: { type: "number" }, thickness: { type: "number" }, length: { type: "number" }, width: { type: "number" },
+      section: { type: "string" }, textileType: { type: "string" },
+      condition: { type: "string", enum: ["C0", "C1", "C2", "C3"] },
+      interface: { type: "string", enum: ["GRIP", "REST", "TENSION", "PIN"] },
+      affordance: { type: "string" }
+    },
+    required: ["family", "material", "diameter", "thickness", "length", "width", "section", "textileType", "condition", "interface", "affordance"]
+  };
+}
+
+function responseText(data) {
+  if (typeof data.output_text === "string") return data.output_text;
+  return (data.output || []).flatMap((item) => item.content || []).map((item) => item.text || "").join("");
+}
+
+document.querySelector("#analyzePhoto").addEventListener("click", async () => {
+  if (!imageData) return alert("먼저 부재 사진을 추가해 주세요.");
+  if (!apiKey.value.trim()) return alert("OpenAI API key를 입력해 주세요. 키는 저장되지 않습니다.");
+  const button = document.querySelector("#analyzePhoto");
+  const original = button.textContent; button.textContent = "분석 중..."; button.disabled = true;
+  const prompt = "Analyze the attached photo of one salvaged component for an architectural reuse inventory. Classify only visible material and likely geometry. Do not infer structural safety, exact dimensions, hidden damage, or child safety from the image. Use 0 for unknown numeric values and empty strings for unknown text. For affordance, suggest 2-4 possible actions rather than a fixed furniture function. Return only the requested JSON.";
+  try {
+    const response = await fetch("https://api.openai.com/v1/responses", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey.value.trim()}` },
+      body: JSON.stringify({
+        model: model.value.trim() || "gpt-4.1-mini",
+        input: [{ role: "user", content: [{ type: "input_text", text: prompt }, { type: "input_image", image_url: imageData }] }],
+        text: { format: { type: "json_schema", name: "material_passport", strict: true, schema: materialSchema() } }
+      })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error?.message || `API error ${response.status}`);
+    document.querySelector("#jsonImport").value = responseText(data).trim();
+    document.querySelector("#jsonPanel").hidden = false;
+    document.querySelector("#applyJson").click();
+    button.textContent = "분석 완료 - 검토 후 등록";
+  } catch (error) {
+    alert(`AI 분석에 실패했습니다.\n${error.message}`); button.textContent = original;
+  } finally { button.disabled = false; }
 });
 
 document.querySelector("#applyJson").addEventListener("click", () => {
