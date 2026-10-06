@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>RE:PLAY - Material Passport</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="site-header">
+      <a class="brand" href="#top" aria-label="RE PLAY home">
+        <span>RE:</span><span>PLAY</span>
+      </a>
+      <div class="header-copy">
+        <p>Material Passport / V0</p>
+        <p>Found parts for playable furniture</p>
+      </div>
+      <div class="counter"><span id="partCount">0</span> registered parts</div>
+    </header>
+
+    <main id="top">
+      <section class="hero">
+        <p class="eyebrow">01 / Intake protocol</p>
+        <h1>버려진 부재를<br /><em>다시 놀 수 있는</em> 재료로 읽는다.</h1>
+        <p class="intro">
+          RE:PLAY는 모든 폐부재를 정밀 복원하지 않습니다. 사진과 최소 치수를 바탕으로
+          선재, 판재, 패브릭의 호환 가능성을 판정하고, 새로운 관계를 위한 재료 여권을 만듭니다.
+        </p>
+        <div class="legend" aria-label="Three material families">
+          <span><i class="dot linear"></i> L / LINEAR</span>
+          <span><i class="dot planar"></i> P / PLANAR</span>
+          <span><i class="dot textile"></i> T / TEXTILE</span>
+        </div>
+      </section>
+
+      <section class="workflow" aria-label="Workflow">
+        <article><b>01</b><span>Capture</span><small>사진 + 기준 치수</small></article>
+        <article><b>02</b><span>AI Draft</span><small>분류 초안 생성</small></article>
+        <article><b>03</b><span>Validate</span><small>사람이 확인</small></article>
+        <article><b>04</b><span>Admit</span><small>키트 입고 판정</small></article>
+      </section>
+
+      <section class="workspace">
+        <div class="intake-panel">
+          <div class="section-heading">
+            <p class="eyebrow">02 / New passport</p>
+            <h2>부재 등록</h2>
+          </div>
+
+          <form id="passportForm">
+            <div class="photo-input" id="dropZone">
+              <input id="photo" type="file" accept="image/*" />
+              <img id="photoPreview" alt="Uploaded component preview" hidden />
+              <div id="photoPlaceholder">
+                <span class="plus">+</span>
+                <strong>부재 사진 추가</strong>
+                <small>그리드, ID, 기준 자를 함께 촬영</small>
+              </div>
+            </div>
+
+            <div class="form-grid">
+              <label>부재 ID
+                <input id="partId" name="id" placeholder="자동 생성" />
+              </label>
+              <label>기본 형상
+                <select id="family" name="family">
+                  <option value="LINEAR">L / LINEAR - 선재</option>
+                  <option value="PLANAR">P / PLANAR - 판재</option>
+                  <option value="TEXTILE">T / TEXTILE - 패브릭</option>
+                </select>
+              </label>
+              <label>재료
+                <input id="material" name="material" placeholder="예: steel tube, plywood" />
+              </label>
+              <label>상태
+                <select id="condition" name="condition">
+                  <option value="C0">C0 / intact</option>
+                  <option value="C1" selected>C1 / surface worn</option>
+                  <option value="C2">C2 / locally damaged</option>
+                  <option value="C3">C3 / display only</option>
+                </select>
+              </label>
+            </div>
+
+            <div class="measurements" id="measurementFields"></div>
+
+            <div class="form-grid">
+              <label>인터페이스
+                <select id="interface" name="interface">
+                  <option value="GRIP">GRIP / 잡기</option>
+                  <option value="REST">REST / 받치기</option>
+                  <option value="TENSION">TENSION / 당기기</option>
+                  <option value="PIN">PIN / 기존 홀 사용</option>
+                </select>
+              </label>
+              <label>가능한 행위
+                <input id="affordance" name="affordance" placeholder="예: hang, frame a gap" />
+              </label>
+            </div>
+
+            <div class="actions">
+              <button type="button" class="button ghost" id="copyPrompt">AI 분류 프롬프트 복사</button>
+              <button type="button" class="button ghost" id="toggleJson">AI JSON 붙여넣기</button>
+              <button class="button primary" type="submit">재료 여권 등록</button>
+            </div>
+
+            <div class="json-panel" id="jsonPanel" hidden>
+              <p>사진을 ChatGPT에 함께 올린 후, 아래 JSON 형식으로 받은 결과를 붙여넣어 주세요.</p>
+              <textarea id="jsonImport" rows="8" placeholder='{"family":"LINEAR","material":"steel tube","diameter":22,"length":680,"condition":"C1","interface":"GRIP","affordance":"hang, frame a gap"}'></textarea>
+              <button type="button" class="button dark" id="applyJson">JSON 값 적용</button>
+            </div>
+          </form>
+        </div>
+
+        <aside class="rule-panel">
+          <p class="eyebrow">03 / Admission rule</p>
+          <h2>호환 가능한<br />재료의 범위</h2>
+          <p class="rule-intro">규격화하는 것은 부재 자체가 아니라, 함께 조립될 수 있는 범위입니다.</p>
+          <div class="rule-card linear-rule">
+            <b>L / LINEAR</b><span>Ø 18-30 mm</span><small>length 300-900 mm</small>
+          </div>
+          <div class="rule-card planar-rule">
+            <b>P / PLANAR</b><span>thickness 9-18 mm</span><small>any side ≤ 600 mm</small>
+          </div>
+          <div class="rule-card textile-rule">
+            <b>T / TEXTILE</b><span>width ≥ 300 mm</span><small>sew / lace / tension capable</small>
+          </div>
+          <p class="note">AI가 초안을 만들고, 사람은 실제 치수와 손상 상태를 확인합니다. 안전성은 자동 판정하지 않습니다.</p>
+        </aside>
+      </section>
+
+      <section class="inventory" id="inventory">
+        <div class="inventory-heading">
+          <div>
+            <p class="eyebrow">04 / Inventory wall</p>
+            <h2>재료 여권</h2>
+          </div>
+          <div class="inventory-actions">
+            <select id="filterFamily" aria-label="Filter material family">
+              <option value="ALL">모든 부재</option>
+              <option value="LINEAR">선재</option>
+              <option value="PLANAR">판재</option>
+              <option value="TEXTILE">패브릭</option>
+            </select>
+            <button class="text-button" id="exportJson">JSON 내보내기</button>
+            <button class="text-button danger" id="clearAll">초기화</button>
+          </div>
+        </div>
+        <div id="emptyState" class="empty-state">
+          <span>0</span>
+          <p>첫 번째 부재를 등록해<br />재료 여권 벽을 시작하세요.</p>
+        </div>
+        <div id="cardGrid" class="card-grid" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <template id="cardTemplate">
+      <article class="passport-card">
+        <div class="card-image"><img alt="Component image" /><span class="no-image">NO IMAGE</span></div>
+        <div class="card-header"><span class="family-tag"></span><b class="admission"></b></div>
+        <h3 class="card-id"></h3>
+        <p class="card-material"></p>
+        <dl class="card-data"></dl>
+        <p class="card-affordance"></p>
+        <button class="delete-card">remove</button>
+      </article>
+    </template>
+
+    <script src="app.js"></script>
+  </body>
+</html>
