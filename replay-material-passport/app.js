@@ -47,6 +47,7 @@ function valuesFromForm() {
   const part = {
     id: get("partId") || nextId(family.value),
     family: family.value,
+    quantity: Math.max(1, Math.round(numeric("quantity") || 1)),
     material: get("material") || "unidentified",
     condition: get("condition"),
     interface: get("interface"),
@@ -80,10 +81,10 @@ function render() {
     const admission = node.querySelector(".admission");
     admission.textContent = part.status;
     admission.classList.add(part.status.toLowerCase());
-    node.querySelector(".card-id").textContent = part.id;
+    node.querySelector(".card-id").textContent = `${part.id} ×${part.quantity || 1}`;
     node.querySelector(".card-material").textContent = part.material;
     node.querySelector(".card-data").innerHTML = [
-      ["dimensions", dimensionText(part)], ["condition", part.condition], ["interface", part.interface]
+      ["quantity", `${part.quantity || 1} pcs`], ["dimensions", dimensionText(part)], ["condition", part.condition], ["interface", part.interface]
     ].map(([key, value]) => `<div><dt>${key}</dt><dd>${value}</dd></div>`).join("");
     node.querySelector(".card-affordance").textContent = `↳ ${part.affordance}`;
     node.querySelector(".delete-card").dataset.id = part.id;
@@ -121,6 +122,7 @@ function materialSchema() {
     additionalProperties: false,
     properties: {
       family: { type: "string", enum: ["LINEAR", "PLANAR", "TEXTILE"] },
+      quantity: { type: "integer", minimum: 1 },
       material: { type: "string" },
       diameter: { type: "number" }, thickness: { type: "number" }, length: { type: "number" }, width: { type: "number" },
       section: { type: "string" }, textileType: { type: "string" },
@@ -128,7 +130,7 @@ function materialSchema() {
       interface: { type: "string", enum: ["GRIP", "REST", "TENSION", "PIN"] },
       affordance: { type: "string" }
     },
-    required: ["family", "material", "diameter", "thickness", "length", "width", "section", "textileType", "condition", "interface", "affordance"]
+    required: ["family", "quantity", "material", "diameter", "thickness", "length", "width", "section", "textileType", "condition", "interface", "affordance"]
   };
 }
 
@@ -142,7 +144,7 @@ document.querySelector("#analyzePhoto").addEventListener("click", async () => {
   if (!apiKey.value.trim()) return alert("OpenAI API key를 입력해 주세요. 키는 저장되지 않습니다.");
   const button = document.querySelector("#analyzePhoto");
   const original = button.textContent; button.textContent = "분석 중..."; button.disabled = true;
-  const prompt = "Analyze the attached photo of one salvaged component for an architectural reuse inventory. Classify only visible material and likely geometry. Do not infer structural safety, exact dimensions, hidden damage, or child safety from the image. Use 0 for unknown numeric values and empty strings for unknown text. For affordance, suggest 2-4 possible actions rather than a fixed furniture function. Return only the requested JSON.";
+  const prompt = "Analyze the attached photo of salvaged component(s) for an architectural reuse inventory. If multiple visibly identical components are present, group them as one passport and count them in quantity. If they differ in family, material, profile, or dimensions, report the dominant group and mention the difference in affordance. Do not infer structural safety, exact dimensions, hidden damage, or child safety from the image. Use 0 for unknown numeric values and empty strings for unknown text. Return only the requested JSON.";
   try {
     const response = await fetch("https://api.openai.com/v1/responses", {
       method: "POST",
@@ -168,14 +170,14 @@ document.querySelector("#applyJson").addEventListener("click", () => {
   try {
     const data = JSON.parse(document.querySelector("#jsonImport").value);
     if (data.family) { family.value = String(data.family).toUpperCase(); drawMeasurementFields(); }
-    ["material", "condition", "interface", "affordance", "diameter", "thickness", "length", "width", "section", "textileType"].forEach((key) => {
+    ["quantity", "material", "condition", "interface", "affordance", "diameter", "thickness", "length", "width", "section", "textileType"].forEach((key) => {
       const input = document.querySelector(`#${key}`); if (input && data[key] !== undefined) input.value = data[key];
     });
   } catch { alert("유효한 JSON 형식인지 확인해 주세요."); }
 });
 
 document.querySelector("#copyPrompt").addEventListener("click", async () => {
-  const prompt = `You are assisting an architectural reuse inventory. Analyze the attached photo of ONE salvaged component. Do not infer structural safety or precise dimensions from the image. Identify only its likely family and visible characteristics. Return JSON only in this exact schema:\n{\n  "family": "LINEAR | PLANAR | TEXTILE",\n  "material": "short material description",\n  "diameter": 0,\n  "thickness": 0,\n  "length": 0,\n  "width": 0,\n  "section": "optional",\n  "textileType": "optional",\n  "condition": "C0 | C1 | C2 | C3",\n  "interface": "GRIP | REST | TENSION | PIN",\n  "affordance": "2-4 possible actions, not a fixed furniture function"\n}\nUse 0 where the image cannot establish a value. The human will measure and verify all dimensions.`;
+  const prompt = `You are assisting an architectural reuse inventory. Analyze the attached photo of salvaged component(s). If multiple visibly identical components are present, group them as ONE passport and count them in quantity. If components differ in family, material, profile, or dimensions, do not group them; report the dominant group only and mention the difference in affordance. Do not infer structural safety or precise dimensions from the image. Identify only likely family and visible characteristics. Return JSON only in this exact schema:\n{\n  "family": "LINEAR | PLANAR | TEXTILE",\n  "quantity": 1,\n  "material": "short material description",\n  "diameter": 0,\n  "thickness": 0,\n  "length": 0,\n  "width": 0,\n  "section": "optional",\n  "textileType": "optional",\n  "condition": "C0 | C1 | C2 | C3",\n  "interface": "GRIP | REST | TENSION | PIN",\n  "affordance": "2-4 possible actions, not a fixed furniture function"\n}\nUse 0 where the image cannot establish a value. The human will measure one representative piece and verify the count.`;
   await navigator.clipboard.writeText(prompt);
   const button = document.querySelector("#copyPrompt"); const original = button.textContent; button.textContent = "복사됨 - 사진을 ChatGPT에 첨부"; setTimeout(() => button.textContent = original, 2200);
 });
