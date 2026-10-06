@@ -8,6 +8,17 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Manrope:wght@400;500;600;700;800&family=Noto+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
+    <style>
+      .ai-bar { margin-top: 12px; padding: 13px; border: 1px solid var(--ink); background: #e6ff9a; display: flex; justify-content: space-between; gap: 14px; align-items: center; }
+      .ai-bar b, .ai-bar small { display: block; }
+      .ai-bar b { font-size: 12px; }
+      .ai-bar small { font: 10px/1.4 "DM Mono", monospace; margin-top: 4px; }
+      .ai-controls { display: flex; gap: 7px; align-items: center; }
+      .ai-controls input { padding: 9px; width: 170px; font: 10px "DM Mono", monospace; }
+      .ai-controls input:last-of-type { width: 118px; }
+      .ai-button { background: var(--ink); color: var(--paper); white-space: nowrap; }
+      @media (max-width: 760px) { .ai-bar { display: block; } .ai-controls { margin-top: 11px; flex-wrap: wrap; } .ai-controls input { flex: 1; min-width: 0; } .ai-controls input:last-of-type { width: auto; } }
+    </style>
   </head>
   <body>
     <header class="site-header">
@@ -61,6 +72,18 @@
               </div>
             </div>
 
+            <div class="ai-bar">
+              <div>
+                <b>AI vision analysis</b>
+                <small>키는 저장하지 않고 현재 브라우저 세션에서만 사용합니다.</small>
+              </div>
+              <div class="ai-controls">
+                <input id="apiKey" type="password" placeholder="OpenAI API key" autocomplete="off" />
+                <input id="model" value="gpt-4.1-mini" aria-label="OpenAI model" />
+                <button type="button" class="button ai-button" id="analyzePhoto">사진 자동 분석</button>
+              </div>
+            </div>
+
             <div class="form-grid">
               <label>부재 ID
                 <input id="partId" name="id" placeholder="자동 생성" />
@@ -102,7 +125,7 @@
             </div>
 
             <div class="actions">
-              <button type="button" class="button ghost" id="copyPrompt">AI 분류 프롬프트 복사</button>
+              <button type="button" class="button ghost" id="copyPrompt">수동 프롬프트 복사</button>
               <button type="button" class="button ghost" id="toggleJson">AI JSON 붙여넣기</button>
               <button class="button primary" type="submit">재료 여권 등록</button>
             </div>
